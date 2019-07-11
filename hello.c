@@ -16,7 +16,11 @@ const char *argv0;
 
 static void fatal_sdl_error(const char *funcname)
 {
-	fprintf(stderr, "%s: %s failed: %s\n", argv0, funcname, SDL_GetError());
+	const char *s = SDL_GetError();
+	if (s && s[0])
+		fprintf(stderr, "%s: %s failed: %s\n", argv0, funcname, s);
+	else
+		fprintf(stderr, "%s: %s failed\n", argv0, funcname);
 	abort();
 }
 
@@ -32,8 +36,8 @@ struct GamePoint {
 
 struct ScreenPoint {
 	// pixels
-	unsigned int x;
-	unsigned int y;
+	int x;     // 0 means left, more means right
+	int y;     // 0 means top, more means down
 };
 
 // linear_map(3, 7, 0, 100, 4) == 25
@@ -53,7 +57,7 @@ bool get_screen_location(struct GamePoint p, struct ScreenPoint *res)
 	if (!(0 <= x && x < SCREEN_WIDTH))
 		return false;
 
-	res->x = (unsigned int)x;
+	res->x = (int)x;
 	// TODO: y
 	return true;
 }
@@ -66,13 +70,10 @@ int main(int argc, char **argv)
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
 		fatal_sdl_error("SDL_Init");
 
-	SDL_Window *win = SDL_CreateWindow("hello", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
-	if (!win)
-		fatal_sdl_error("SDL_CreateWindow");
-
-	SDL_Surface *sur = SDL_GetWindowSurface(win);
-	SDL_FillRect(sur, NULL, SDL_MapRGB(sur->format, 0xff, 0, 0xff));
-	SDL_UpdateWindowSurface(win);
+	SDL_Window *win;
+	SDL_Renderer *rnd;
+	if (SDL_CreateWindowAndRenderer(SCREEN_WIDTH, SCREEN_HEIGHT, 0, &win, &rnd) < 0)
+		fatal_sdl_error("SDL_CreateWindowAndRenderer");
 
 	struct GamePoint points[2*NUMBER_OF_FUNNY_POINTS_Z_DIRECTION];
 	for (size_t i = 0; i < NUMBER_OF_FUNNY_POINTS_Z_DIRECTION; i++) {
@@ -83,15 +84,20 @@ int main(int argc, char **argv)
 
 	for (size_t i = 0; i < sizeof(points)/sizeof(points[0]); i++) {
 		struct ScreenPoint sp;
-		if (get_screen_location(points[i], &sp)) {
-			for (unsigned int i = 0; i < sp.x; i += 10)
-				putchar(' ');
-			putchar('|');
-			putchar('\n');
-		}
-	}
+		if (!get_screen_location(points[i], &sp))
+			continue;
 
-	//SDL_Delay(2000);
+		SDL_RenderDrawLine(rnd, sp.x, 0, sp.x, SCREEN_HEIGHT);
+	}
+	SDL_RenderPresent(rnd);
+
+	/*
+	SDL_Surface *sur = SDL_GetWindowSurface(win);
+	SDL_FillRect(sur, NULL, SDL_MapRGB(sur->format, 0xff, 0, 0xff));
+	SDL_UpdateWindowSurface(win);
+	*/
+
+	SDL_Delay(2000);
 	SDL_DestroyWindow(win);
 	SDL_Quit();
 
