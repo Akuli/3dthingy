@@ -27,6 +27,7 @@ static void fatal_sdl_error(const char *funcname)
 
 #define NUMBER_OF_FUNNY_POINTS_Z_DIRECTION 10
 #define VIEW_WIDTH_ANGLE 1.0f
+#define VIEW_HEIGHT_ANGLE (VIEW_WIDTH_ANGLE * SCREEN_HEIGHT / SCREEN_WIDTH)
 
 struct GamePoint {
 	float x;   // more means right
@@ -49,17 +50,25 @@ static float linear_map(float srcmin, float srcmax, float dstmin, float dstmax, 
 
 bool get_screen_location(struct GamePoint p, struct ScreenPoint *res)
 {
-	// example angles: 0 means right, pi/2 means forward, pi means left, -pi means left, -pi/2 means back
-	float angle = atan2f(-p.z, p.x);
+	// examples: 0 means right, pi/2 means forward, pi means left, -pi means left, -pi/2 means back
+	float xzangle = atan2f(-p.z, p.x);
 
 	assert(0 < VIEW_WIDTH_ANGLE && VIEW_WIDTH_ANGLE < PI_FLOAT/2);
-	float x = linear_map(PI_FLOAT/2 - VIEW_WIDTH_ANGLE, PI_FLOAT/2 + VIEW_WIDTH_ANGLE, 0, SCREEN_WIDTH, angle);
-	if (!(0 <= x && x < SCREEN_WIDTH))
+	float scrx = linear_map(PI_FLOAT/2 - VIEW_WIDTH_ANGLE, PI_FLOAT/2 + VIEW_WIDTH_ANGLE, 0, SCREEN_WIDTH, xzangle);
+	if (!(0 <= scrx && scrx < SCREEN_WIDTH))
 		return false;
 
-	res->x = (int)x;
-	// TODO: y
-	return true;
+	// examples: pi means down, pi/2 means forward, 0 means up
+	float yzangle = atan2f(-p.z, p.y);
+	printf("xyangle = %f\n", yzangle);
+
+	assert(0 < VIEW_HEIGHT_ANGLE && VIEW_HEIGHT_ANGLE < PI_FLOAT/2);
+	float scry = linear_map(PI_FLOAT/2 - VIEW_HEIGHT_ANGLE, PI_FLOAT/2 + VIEW_HEIGHT_ANGLE, 0, SCREEN_HEIGHT, yzangle);
+
+	res->x = (int)scrx;
+	res->y = (int)scry;
+	return (0 <= scrx && scrx < SCREEN_WIDTH &&
+			0 <= scry && scry < SCREEN_HEIGHT);
 }
 
 int main(int argc, char **argv)
@@ -78,8 +87,8 @@ int main(int argc, char **argv)
 	struct GamePoint points[2*NUMBER_OF_FUNNY_POINTS_Z_DIRECTION];
 	for (size_t i = 0; i < NUMBER_OF_FUNNY_POINTS_Z_DIRECTION; i++) {
 		float z = -(float)i;
-		points[2*i]     = (struct GamePoint){ .x =  1.0, .y = 0, .z = z };
-		points[2*i + 1] = (struct GamePoint){ .x = -1.0, .y = 0, .z = z };
+		points[2*i]     = (struct GamePoint){ .x =  1.0, .y = -1.0, .z = z };
+		points[2*i + 1] = (struct GamePoint){ .x = -1.0, .y = -1.0, .z = z };
 	}
 
 	for (size_t i = 0; i < sizeof(points)/sizeof(points[0]); i++) {
@@ -87,7 +96,7 @@ int main(int argc, char **argv)
 		if (!get_screen_location(points[i], &sp))
 			continue;
 
-		SDL_RenderDrawLine(rnd, sp.x, 0, sp.x, SCREEN_HEIGHT);
+		SDL_RenderDrawLine(rnd, sp.x, sp.y, sp.x, sp.y+10);
 	}
 	SDL_RenderPresent(rnd);
 
