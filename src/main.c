@@ -1,14 +1,11 @@
-#include <assert.h>
-#include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-
 #include <SDL2/SDL.h>
-
-#include "vecmat.h"
+#include "display.h"
 #include "player.h"
+#include "vecmat.h"
 
 #define GRID_SIZE 10
 #define FPS 60

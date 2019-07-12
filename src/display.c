@@ -1,4 +1,5 @@
 #include "display.h"
+#include <stdbool.h>
 
 bool display_pointisonscreen(struct DisplayPoint dp)
 {

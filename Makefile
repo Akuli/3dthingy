@@ -12,6 +12,10 @@ SRC := $(filter-out src/main.c, $(wildcard src/*.c src/objects/*.c))
 OBJ := $(SRC:src/%.c=obj/%.o)
 HEADERS := $(wildcard src/*.h src/objects/*.h)
 
+IWYU ?= iwyu
+IWYUFLAGS += -Xiwyu --no_fwd_decl
+IWYUFLAGS += -Xiwyu --mapping_file=sdl2.imp
+
 all: 3dthingy
 
 .PHONY: clean
@@ -23,3 +27,10 @@ obj/%.o: src/%.c $(HEADERS)
 
 3dthingy: src/main.c $(OBJ) $(HEADERS)
 	$(CC) $(CFLAGS) $< $(OBJ) -o $@ $(LDFLAGS)
+
+# passing headers as arguments to IWYU makes them get iwyued twice
+.PHONY: iwyu
+iwyu:
+	for file in src/main.c $(SRC); do \
+		$(IWYU) $(IWYUFLAGS) -I. "$$file" 2>&1 || true; \
+	done | grep --line-buffered -v '^(.* has correct #includes/fwd-decls)$$' | cat -s
