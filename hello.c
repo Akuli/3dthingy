@@ -52,14 +52,14 @@ static inline struct Vec3 vec3_sub(struct Vec3 a, struct Vec3 b)
 
 struct ScreenPoint {
 	// pixels
-	int x;     // 0 means left, more means right
-	int y;     // 0 means top, more means down
+	float x;     // 0 means left, more means right
+	float y;     // 0 means top, more means down
 };
 
 static bool screenpoint_isonscreen(struct ScreenPoint sp)
 {
-	return (0 <= sp.x && sp.x < SCREEN_WIDTH &&
-			0 <= sp.y && sp.y < SCREEN_HEIGHT);
+	return (0 <= (int)sp.x && (int)sp.x < SCREEN_WIDTH &&
+			0 <= (int)sp.y && (int)sp.y < SCREEN_HEIGHT);
 }
 
 
@@ -93,7 +93,7 @@ struct ScreenPoint vec3_to_screenpoint(struct Vec3 plrloc, struct Vec3 pnt)
 		0, SCREEN_HEIGHT,
 		yzangle);
 
-	return (struct ScreenPoint){ (int)x, (int)y };
+	return (struct ScreenPoint){ x, y };
 }
 
 
@@ -102,18 +102,69 @@ struct Line {
 	struct Vec3 end;
 };
 
-static void draw_line(SDL_Renderer *rnd, struct ScreenPoint sp1, struct ScreenPoint sp2)
+// finds intersections of infinitely long lines a and b
+struct ScreenPoint intersect_lines(
+	struct ScreenPoint astart, struct ScreenPoint aend,
+	struct ScreenPoint bstart, struct ScreenPoint bend)
 {
-	// FIXME: if line is partially off the screen, then draw the part that is on screen
-	if (screenpoint_isonscreen(sp1) && screenpoint_isonscreen(sp2))
-		SDL_RenderDrawLine(rnd, sp1.x, sp1.y, sp2.x, sp2.y);
+	// https://en.wikipedia.org/wiki/Line%E2%80%93line_intersection#Given_two_points_on_each_line
+	float x1 = astart.x;
+	float y1 = astart.y;
+	float x2 = aend.x;
+	float y2 = aend.y;
+	float x3 = bstart.x;
+	float y3 = bstart.y;
+	float x4 = bend.x;
+	float y4 = bend.y;
+
+	float denom = (x1-x2)*(y3-y4) - (y1-y2)*(x3-x4);
+	assert(fabs(denom) > 0.001);   // TODO
+	return (struct ScreenPoint){
+		( (x1*y2-y1*x2)*(x3-x4) - (x1-x2)*(x3*y4-y3*x4) )/denom,
+		( (x1*y2-y1*x2)*(y3-y4) - (y1-y2)*(x3*y4-y3*x4) )/denom,
+	};
+}
+
+static bool fit_point_of_line_to_screen(struct ScreenPoint *pnt, struct ScreenPoint otherpnt)
+{
+	// e.g. tl = top left
+	struct ScreenPoint tl = {0,0};
+	struct ScreenPoint tr = {SCREEN_WIDTH-1,0};
+	struct ScreenPoint bl = {0,SCREEN_HEIGHT-1};
+	struct ScreenPoint br = {SCREEN_WIDTH-1,SCREEN_HEIGHT-1};
+
+	if (pnt->x < 0)
+		*pnt = intersect_lines(*pnt, otherpnt, tl, bl);
+	if (pnt->x >= SCREEN_WIDTH)
+		*pnt = intersect_lines(*pnt, otherpnt, tr, br);
+	if (pnt->y < 0)
+		*pnt = intersect_lines(*pnt, otherpnt, tl, tr);
+	if (pnt->y >= SCREEN_HEIGHT)
+		*pnt = intersect_lines(*pnt, otherpnt, bl, br);
+
+	// FIXME: prevent the weird thing from happening correctly instead of this hack
+	return (pnt->y > SCREEN_HEIGHT/4);
 }
 
 static void line_draw(struct Vec3 plrloc, SDL_Renderer *rnd, struct Line ln)
 {
 	struct ScreenPoint sp1 = vec3_to_screenpoint(plrloc, ln.start);
 	struct ScreenPoint sp2 = vec3_to_screenpoint(plrloc, ln.end);
-	draw_line(rnd, sp1, sp2);
+
+	bool scr1 = screenpoint_isonscreen(sp1);
+	bool scr2 = screenpoint_isonscreen(sp2);
+
+	if (!scr1 && !scr2)
+		return;
+	if (!scr1 && !fit_point_of_line_to_screen(&sp1, sp2))
+		return;
+	if (!scr2 && !fit_point_of_line_to_screen(&sp2, sp1))
+		return;
+
+	if (!screenpoint_isonscreen(sp1) || !screenpoint_isonscreen(sp2))
+		return;
+
+	SDL_RenderDrawLine(rnd, (int)sp1.x, (int)sp1.y, (int)sp2.x, (int)sp2.y);
 }
 
 
