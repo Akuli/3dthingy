@@ -9,20 +9,13 @@ You can use arrow keys to move around, or fly and land with `w` and `s` keys.
 
 ## Compiling
 
-Install dependencies:
-
-    $ sudo apt install gcc make pkg-config libsdl2-dev
+    $ sudo apt install git gcc make pkg-config libsdl2-dev
+    $ git clone https://github.com/Akuli/3dthingy
+    $ cd 3dthingy
+    $ make
+    $ ./3dthingy
 
 I have no idea what you need to do if you don't have apt.
-
-Next you can clone the repo, `cd` into it and compile:
-
-    $ make
-    $ ./hello
-
-Run it:
-
-    $ ./3dthingy
 
 
 ## Running IWYU
