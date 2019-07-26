@@ -12,7 +12,8 @@ struct Player {
 void player_init(struct Player *plr);
 
 // figure out where the player sees the given point
-struct DisplayPoint player_getdisplaypoint(struct Player plr, struct Vec3 pnt);
+// returns false when the point is on the other side of the player and should just be completely ignored
+bool player_getdisplaypoint(struct Player plr, struct Vec3 pnt, struct DisplayPoint *ptr);
 
 enum PlayerMove {
 	PLAYERMOVE_FORWARD,

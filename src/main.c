@@ -97,9 +97,12 @@ int main(int argc, char **argv)
 		SDL_RenderClear(rnd);
 
 		for (size_t i = 0; i < sizeof(lines)/sizeof(lines[0]); i++) {
-			struct DisplayPoint dp1 = player_getdisplaypoint(plr, lines[i].start);
-			struct DisplayPoint dp2 = player_getdisplaypoint(plr, lines[i].end);
-			display_line(rnd, dp1, dp2);
+			struct DisplayPoint dp1, dp2;
+			if (player_getdisplaypoint(plr, lines[i].start, &dp1) &&
+				player_getdisplaypoint(plr, lines[i].end, &dp2))
+			{
+				display_line(rnd, dp1, dp2);
+			}
 		}
 
 		SDL_RenderPresent(rnd);

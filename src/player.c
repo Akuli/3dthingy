@@ -17,7 +17,17 @@ void player_init(struct Player *plr)
 }
 
 
-static double pi = 0;
+static double pi=0, tan_view_width_angle=0, tan_view_height_angle=0;
+
+static void init_constants(void)
+{
+	if (pi != 0)
+		return;
+
+	pi = 4*atan(1.0);
+	tan_view_width_angle = tan(VIEW_WIDTH_ANGLE);
+	tan_view_height_angle = tan(VIEW_HEIGHT_ANGLE);
+}
 
 // linear_map(3, 7, 0, 100, 4) == 25
 static double linear_map(double srcmin, double srcmax, double dstmin, double dstmax, double val)
@@ -26,35 +36,36 @@ static double linear_map(double srcmin, double srcmax, double dstmin, double dst
 	return dstmin + relative*(dstmax - dstmin);
 }
 
-struct DisplayPoint player_getdisplaypoint(struct Player plr, struct Vec3 pnt)
+bool player_getdisplaypoint(struct Player plr, struct Vec3 pnt, struct DisplayPoint *ptr)
 {
-	if (pi == 0)
-		pi = 4*atan(1.0);
+	init_constants();
 
 	struct Vec3 rel = vec3_sub(pnt, plr.loc);
 
 	struct Mat3 antirotate = mat3_rotation_xz(-plr.rot);
 	rel = mat3_mul_vec3(antirotate, rel);
 
-	// examples: 0 means right, pi/2 means forward, pi means left, -pi means left, -pi/2 means back
-	double xzangle = atan2(-rel.z, -rel.x);
+	if (rel.z > 0)   // object behind the player
+		return false;
 
-	// examples: pi means down, pi/2 means forward, 0 means up
-	double yzangle = atan2(-rel.z, rel.y);
+	// positive means left, 0 means forward, negative means right
+	double xzslope = rel.x / (-rel.z);
+
+	// positive means down, 0 means forward, negative means up
+	double yzslope = (-rel.y) / (-rel.z);
 
 	assert(0 < VIEW_WIDTH_ANGLE && VIEW_WIDTH_ANGLE < pi/2);
 	assert(0 < VIEW_HEIGHT_ANGLE && VIEW_HEIGHT_ANGLE < pi/2);
 
-	double x = linear_map(
-		pi/2 - VIEW_WIDTH_ANGLE, pi/2 + VIEW_WIDTH_ANGLE,
+	ptr->x = linear_map(
+		-tan_view_width_angle, tan_view_width_angle,
 		0, DISPLAY_WIDTH,
-		xzangle);
-	double y = linear_map(
-		pi/2 - VIEW_HEIGHT_ANGLE, pi/2 + VIEW_HEIGHT_ANGLE,
+		xzslope);
+	ptr->y = linear_map(
+		-tan_view_height_angle, tan_view_height_angle,
 		0, DISPLAY_HEIGHT,
-		yzangle);
-
-	return (struct DisplayPoint){ x, y };
+		yzslope);
+	return true;
 }
 
 void player_move(struct Player *plr, enum PlayerMove mv, int dir)

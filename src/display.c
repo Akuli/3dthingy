@@ -20,7 +20,7 @@ static struct DisplayPoint intersect_lines(
 		x1 = astart.x, y1 = astart.y,
 		x2 = aend.x,   y2 = aend.y,
 		x3 = bstart.x, y3 = bstart.y,
-		x4 = bend.x, y4 = bend.y;
+		x4 = bend.x,   y4 = bend.y;
 
 	double denom = (x1-x2)*(y3-y4) - (y1-y2)*(x3-x4);
 	// TODO: handle the case where denom is very small
@@ -30,7 +30,7 @@ static struct DisplayPoint intersect_lines(
 	};
 }
 
-static bool fit_point_of_line_to_screen(struct DisplayPoint *pnt, struct DisplayPoint otherpnt)
+static void fit_point_of_line_to_screen(struct DisplayPoint *pnt, struct DisplayPoint otherpnt)
 {
 	// e.g. tl = top left
 	struct DisplayPoint tl = {0,0};
@@ -46,9 +46,6 @@ static bool fit_point_of_line_to_screen(struct DisplayPoint *pnt, struct Display
 		*pnt = intersect_lines(*pnt, otherpnt, tl, tr);
 	if (pnt->y >= DISPLAY_HEIGHT)
 		*pnt = intersect_lines(*pnt, otherpnt, bl, br);
-
-	// FIXME: prevent the weird thing from happening correctly instead of this hack
-	return (pnt->y > DISPLAY_HEIGHT/4);
 }
 
 void display_line(SDL_Renderer *rnd, struct DisplayPoint dp1, struct DisplayPoint dp2)
@@ -58,10 +55,10 @@ void display_line(SDL_Renderer *rnd, struct DisplayPoint dp1, struct DisplayPoin
 
 	if (!scr1 && !scr2)
 		return;
-	if (!scr1 && !fit_point_of_line_to_screen(&dp1, dp2))
-		return;
-	if (!scr2 && !fit_point_of_line_to_screen(&dp2, dp1))
-		return;
+	if (!scr1)
+		fit_point_of_line_to_screen(&dp1, dp2);
+	if (!scr2)
+		fit_point_of_line_to_screen(&dp2, dp1);
 
 	if (!display_pointisonscreen(dp1) || !display_pointisonscreen(dp2))
 		return;
