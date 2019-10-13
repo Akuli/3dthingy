@@ -63,5 +63,6 @@ void display_line(SDL_Renderer *rnd, struct DisplayPoint dp1, struct DisplayPoin
 	if (!display_pointisonscreen(dp1) || !display_pointisonscreen(dp2))
 		return;
 
+	// this function call uses a lot of cpu
 	SDL_RenderDrawLine(rnd, (int)dp1.x, (int)dp1.y, (int)dp2.x, (int)dp2.y);
 }

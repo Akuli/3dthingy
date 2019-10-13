@@ -11,7 +11,7 @@
 #define FPS 60
 
 
-void handle_key(struct Player *plr, SDL_Keysym k)
+void handle_key(struct Player *plr, SDL_Keysym k, bool *changeflag)
 {
 	switch(k.sym) {
 	case 'w':
@@ -35,6 +35,8 @@ void handle_key(struct Player *plr, SDL_Keysym k)
 	default:
 		return;
 	}
+
+	*changeflag = true;
 }
 
 struct Line {
@@ -52,12 +54,14 @@ int main(int argc, char **argv)
 	SDL_Window *win;
 	SDL_Renderer *rnd;
 	if(SDL_CreateWindowAndRenderer(DISPLAY_WIDTH, DISPLAY_HEIGHT, 0, &win, &rnd) < 0) {
-		fprintf(stderr, "SDL_Init failed: %s\n", SDL_GetError());
+		fprintf(stderr, "SDL_CreateWindowAndRenderer failed: %s\n", SDL_GetError());
 		abort();
 	}
 
 	struct Player plr;
 	player_init(&plr);
+
+	bool changeflag = true;
 
 	while (true) {
 		uint32_t start = SDL_GetTicks();
@@ -66,7 +70,7 @@ int main(int argc, char **argv)
 		while (SDL_PollEvent(&evt)) {
 			switch(evt.type) {
 			case SDL_KEYDOWN:
-				handle_key(&plr, evt.key.keysym);
+				handle_key(&plr, evt.key.keysym, &changeflag);
 				break;
 
 			case SDL_QUIT:
@@ -79,9 +83,15 @@ int main(int argc, char **argv)
 			}
 		}
 
-		SDL_RenderClear(rnd);
-		grid_draw(rnd, &plr);
+		if (changeflag) {
+			printf("ch\n");
+			SDL_RenderClear(rnd);
+			grid_draw(rnd, &plr);
+		}
 		SDL_RenderPresent(rnd);
+
+		// this is here to make sure that stuff gets rendered when the program starts
+		changeflag = false;
 
 		uint32_t sleep2 = start + (uint32_t)(1000/FPS);
 		uint32_t end = SDL_GetTicks();
