@@ -1,6 +1,8 @@
 #ifndef PHYSICS_H
 #define PHYSICS_H
 
+#include "vecmat.h"
+
 // this is needed for physics because changing this must not affect how fast objects move
 #define PHYSICS_FPS 30
 

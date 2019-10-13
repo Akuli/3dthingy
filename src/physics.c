@@ -1,5 +1,4 @@
 #include <assert.h>
-#include <stdio.h>
 #include "graph.h"
 #include "physics.h"
 #include "vecmat.h"

@@ -10,7 +10,7 @@
 #include "vecmat.h"
 
 
-static void handle_key(struct Player *plr, SDL_Keysym k, bool *changeflag)
+static void handle_key(struct Player *plr, SDL_Keysym k)
 {
 	switch(k.sym) {
 	case 'w':
@@ -34,25 +34,6 @@ static void handle_key(struct Player *plr, SDL_Keysym k, bool *changeflag)
 	default:
 		return;
 	}
-
-	*changeflag = true;
-}
-
-static void draw_circle(SDL_Renderer *rnd, int centerx, int centery, int radius)
-{
-	for (int x = -radius; x < radius; x++) {
-		int yminmax = (int) sqrt(radius*radius - x*x);
-		for (int y = -yminmax + 1; y < yminmax; y++)
-			SDL_RenderDrawPoint(rnd, centerx + x, centery + y);
-	}
-}
-
-static void draw_physics_object_circle(
-	SDL_Renderer *rnd, const struct Player *plr, const struct PhysicsObject *po)
-{
-	struct DisplayPoint dp;
-	if (player_getdisplaypoint(*plr, po->location, &dp))
-		draw_circle(rnd, (int)dp.x, (int)dp.y, 30);
 }
 
 int main(int argc, char **argv)
@@ -72,13 +53,6 @@ int main(int argc, char **argv)
 	struct Player plr;
 	player_init(&plr);
 
-	struct PhysicsObject po = {0};
-	po.location.z = -3.0;
-	po.location.y = 3.0;
-	po.frictionness = 3.0;
-
-	bool changeflag = true;
-
 	while (true) {
 		uint32_t start = SDL_GetTicks();
 
@@ -86,7 +60,7 @@ int main(int argc, char **argv)
 		while (SDL_PollEvent(&evt)) {
 			switch(evt.type) {
 			case SDL_KEYDOWN:
-				handle_key(&plr, evt.key.keysym, &changeflag);
+				handle_key(&plr, evt.key.keysym);
 				break;
 
 			case SDL_QUIT:
@@ -99,22 +73,15 @@ int main(int argc, char **argv)
 			}
 		}
 
-		// TODO: figure out how changeflag should be used with the physics stuff
 		SDL_RenderClear(rnd);
 
 		SDL_SetRenderDrawColor(rnd, 0xff, 0xff, 0xff, 0xff);
-		grid_draw(rnd, &plr);    // slow, uses a lot of cpu
-
-		SDL_SetRenderDrawColor(rnd, 0, 0xff, 0xff, 0xff);
-		draw_physics_object_circle(rnd, &plr, &po);
+		grid_draw(rnd, &plr);    // TODO: slow, uses a lot of cpu
 
 		SDL_SetRenderDrawColor(rnd, 0, 0, 0, 0xff);
 		SDL_RenderPresent(rnd);
 
-		// this is here to make sure that stuff gets rendered when the program starts
-		changeflag = false;
-
-		physicsobject_move(&po);
+		physicsobject_move(&plr.physics);
 
 		uint32_t sleep2 = start + (uint32_t)(1000/PHYSICS_FPS);
 		uint32_t end = SDL_GetTicks();

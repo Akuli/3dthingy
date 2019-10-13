@@ -2,10 +2,11 @@
 #define PLAYER_H
 
 #include "display.h"
+#include "physics.h"
 #include "vecmat.h"
 
 struct Player {
-	struct Vec3 loc;
+	struct PhysicsObject physics;
 	double rot;    // rotation angle, more means counter-clockwise if viewed from above
 };
 

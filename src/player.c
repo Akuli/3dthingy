@@ -7,12 +7,18 @@
 #define VIEW_WIDTH_ANGLE 1.0
 #define VIEW_HEIGHT_ANGLE (VIEW_WIDTH_ANGLE * DISPLAY_HEIGHT / DISPLAY_WIDTH)
 
-#define MOVING_SPEED 0.1
+#define MOVING_SPEED 0.5
 #define ROTATION_SPEED 0.1
+
+static const struct Vec3 player_to_camera = { 0.0, 0.5, 0.0 };
 
 void player_init(struct Player *plr)
 {
-	plr->loc = (struct Vec3){0.0, 0.5, 0.0};
+	plr->physics = (struct PhysicsObject){
+		.location = (struct Vec3){ 3.0, 0.5, 4.0 },
+		.velocity = (struct Vec3){ 0.0, 0.0, 0.0 },
+		.frictionness = 3.0,
+	};
 	plr->rot = 0;
 }
 
@@ -40,7 +46,7 @@ bool player_getdisplaypoint(struct Player plr, struct Vec3 pnt, struct DisplayPo
 {
 	init_constants();
 
-	struct Vec3 rel = vec3_sub(pnt, plr.loc);
+	struct Vec3 rel = vec3_sub(pnt, vec3_add(plr.physics.location, player_to_camera));
 
 	struct Mat3 antirotate = mat3_rotation_xz(-plr.rot);
 	rel = mat3_mul_vec3(antirotate, rel);
@@ -87,5 +93,6 @@ void player_move(struct Player *plr, enum PlayerMove mv, int dir)
 		return;   // skip diff stuff
 	}
 
-	plr->loc = vec3_add(plr->loc, mat3_mul_vec3(mat3_rotation_xz(plr->rot), diff));
+	struct Mat3 rotate = mat3_rotation_xz(plr->rot);
+	plr->physics.velocity = vec3_add(plr->physics.velocity, mat3_mul_vec3(rotate, diff));
 }
