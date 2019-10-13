@@ -73,6 +73,8 @@ void player_move(struct Player *plr, enum PlayerMove mv, int dir)
 	assert(dir==1 || dir==-1);
 	struct Vec3 diff;
 
+	// fps not used here because it does not affect how often this is called
+	// this triggers repeatedly because keys are held down
 	switch(mv) {
 	case PLAYERMOVE_FORWARD:
 		diff = (struct Vec3){0,0,-dir*MOVING_SPEED};

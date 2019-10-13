@@ -5,13 +5,12 @@
 #include <SDL2/SDL.h>
 #include "display.h"
 #include "grid.h"
+#include "physics.h"
 #include "player.h"
 #include "vecmat.h"
 
-#define FPS 60
 
-
-void handle_key(struct Player *plr, SDL_Keysym k, bool *changeflag)
+static void handle_key(struct Player *plr, SDL_Keysym k, bool *changeflag)
 {
 	switch(k.sym) {
 	case 'w':
@@ -39,10 +38,22 @@ void handle_key(struct Player *plr, SDL_Keysym k, bool *changeflag)
 	*changeflag = true;
 }
 
-struct Line {
-	struct Vec3 start;
-	struct Vec3 end;
-};
+static void draw_circle(SDL_Renderer *rnd, int centerx, int centery, int radius)
+{
+	for (int x = -radius; x < radius; x++) {
+		int yminmax = (int) sqrt(radius*radius - x*x);
+		for (int y = -yminmax + 1; y < yminmax; y++)
+			SDL_RenderDrawPoint(rnd, centerx + x, centery + y);
+	}
+}
+
+static void draw_physics_object_circle(
+	SDL_Renderer *rnd, const struct Player *plr, const struct PhysicsObject *po)
+{
+	struct DisplayPoint dp;
+	if (player_getdisplaypoint(*plr, po->location, &dp))
+		draw_circle(rnd, (int)dp.x, (int)dp.y, 30);
+}
 
 int main(int argc, char **argv)
 {
@@ -60,6 +71,11 @@ int main(int argc, char **argv)
 
 	struct Player plr;
 	player_init(&plr);
+
+	struct PhysicsObject po = {0};
+	po.location.z = -3.0;
+	po.location.y = 3.0;
+	po.frictionness = 3.0;
 
 	bool changeflag = true;
 
@@ -83,16 +99,24 @@ int main(int argc, char **argv)
 			}
 		}
 
-		if (changeflag) {
-			SDL_RenderClear(rnd);
-			grid_draw(rnd, &plr);
-		}
+		// TODO: figure out how changeflag should be used with the physics stuff
+		SDL_RenderClear(rnd);
+
+		SDL_SetRenderDrawColor(rnd, 0xff, 0xff, 0xff, 0xff);
+		grid_draw(rnd, &plr);    // slow, uses a lot of cpu
+
+		SDL_SetRenderDrawColor(rnd, 0, 0xff, 0xff, 0xff);
+		draw_physics_object_circle(rnd, &plr, &po);
+
+		SDL_SetRenderDrawColor(rnd, 0, 0, 0, 0xff);
 		SDL_RenderPresent(rnd);
 
 		// this is here to make sure that stuff gets rendered when the program starts
 		changeflag = false;
 
-		uint32_t sleep2 = start + (uint32_t)(1000/FPS);
+		physicsobject_move(&po);
+
+		uint32_t sleep2 = start + (uint32_t)(1000/PHYSICS_FPS);
 		uint32_t end = SDL_GetTicks();
 		if (end < sleep2)
 			SDL_Delay(sleep2 - end);

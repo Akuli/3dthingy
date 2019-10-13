@@ -36,7 +36,10 @@ void grid_draw(struct SDL_Renderer *rnd, const struct Player *plr)
 
 			draw_line(rnd, plr, point, xxpoint);
 			draw_line(rnd, plr, point, zzpoint);
-			draw_line(rnd, plr, point, vec3_add(point, vec3_mul_scalar(graph_perp_vector(x, z), 0.1)));
+
+			// uncomment to see perpendicular vectors
+			// useful for checking that you got derivatives right in graph.c
+			//draw_line(rnd, plr, point, vec3_add(point, vec3_mul_scalar(graph_perp_vector(x, z), 0.1)));
 		}
 	}
 }
