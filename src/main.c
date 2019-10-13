@@ -4,10 +4,10 @@
 #include <stdlib.h>
 #include <SDL2/SDL.h>
 #include "display.h"
+#include "grid.h"
 #include "player.h"
 #include "vecmat.h"
 
-#define GRID_SIZE 10
 #define FPS 60
 
 
@@ -59,21 +59,6 @@ int main(int argc, char **argv)
 	struct Player plr;
 	player_init(&plr);
 
-	struct Line lines[2*(2*GRID_SIZE)*(2*GRID_SIZE)];
-	size_t i = 0;
-	for (int x = -GRID_SIZE; x < GRID_SIZE; x++) {
-		for (int z = -GRID_SIZE; z < GRID_SIZE; z++) {
-			lines[i++] = (struct Line){
-				(struct Vec3){ (double)x, 0, (double)z },
-				(struct Vec3){ (double)(x+1), 0, (double)z },
-			};
-			lines[i++] = (struct Line){
-				(struct Vec3){ (double)x, 0, (double)z },
-				(struct Vec3){ (double)x, 0, (double)(z+1) },
-			};
-		}
-	}
-
 	while (true) {
 		uint32_t start = SDL_GetTicks();
 
@@ -95,16 +80,7 @@ int main(int argc, char **argv)
 		}
 
 		SDL_RenderClear(rnd);
-
-		for (size_t i = 0; i < sizeof(lines)/sizeof(lines[0]); i++) {
-			struct DisplayPoint dp1, dp2;
-			if (player_getdisplaypoint(plr, lines[i].start, &dp1) &&
-				player_getdisplaypoint(plr, lines[i].end, &dp2))
-			{
-				display_line(rnd, dp1, dp2);
-			}
-		}
-
+		grid_draw(rnd, &plr);
 		SDL_RenderPresent(rnd);
 
 		uint32_t sleep2 = start + (uint32_t)(1000/FPS);
