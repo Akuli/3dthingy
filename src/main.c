@@ -10,26 +10,26 @@
 #include "vecmat.h"
 
 
-static void handle_key(struct Player *plr, SDL_Keysym k)
+static void handle_key(struct Player *plr, SDL_Keysym k, bool keydown)
 {
 	switch(k.sym) {
 	case 'w':
-		player_move(plr, PLAYERMOVE_HIGHER, 1);
+		plr->movingup = 1*keydown;
 		break;
 	case 's':
-		player_move(plr, PLAYERMOVE_HIGHER, -1);
+		plr->movingup = -1*keydown;
 		break;
 	case SDLK_UP:
-		player_move(plr, PLAYERMOVE_FORWARD, 1);
+		plr->moving4ward = 1*keydown;
 		break;
 	case SDLK_DOWN:
-		player_move(plr, PLAYERMOVE_FORWARD, -1);
+		plr->moving4ward = -1*keydown;
 		break;
 	case SDLK_RIGHT:
-		player_move(plr, PLAYERMOVE_ROTATE, 1);
+		plr->rotating = 1*keydown;
 		break;
 	case SDLK_LEFT:
-		player_move(plr, PLAYERMOVE_ROTATE, -1);
+		plr->rotating = -1*keydown;
 		break;
 	default:
 		return;
@@ -60,7 +60,10 @@ int main(int argc, char **argv)
 		while (SDL_PollEvent(&evt)) {
 			switch(evt.type) {
 			case SDL_KEYDOWN:
-				handle_key(&plr, evt.key.keysym);
+				handle_key(&plr, evt.key.keysym, true);
+				break;
+			case SDL_KEYUP:
+				handle_key(&plr, evt.key.keysym, false);
 				break;
 
 			case SDL_QUIT:
@@ -81,7 +84,7 @@ int main(int argc, char **argv)
 		SDL_SetRenderDrawColor(rnd, 0, 0, 0, 0xff);
 		SDL_RenderPresent(rnd);
 
-		physicsobject_move(&plr.physics);
+		player_move(&plr);
 
 		uint32_t sleep2 = start + (uint32_t)(1000/PHYSICS_FPS);
 		uint32_t end = SDL_GetTicks();

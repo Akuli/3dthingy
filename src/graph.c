@@ -8,6 +8,9 @@
 double graph_y(double x, double z) {              return sin(x)+sin(z); }
 static double partial_wrt_z(double x, double z) { return        cos(z); }
 static double partial_wrt_x(double x, double z) { return cos(x)       ; }
+//double graph_y(double x, double z) { return exp(-(x*x+z*z)); }
+//static double partial_wrt_z(double x, double z) { return -2*z*exp(-(x*x+z*z)); }
+//static double partial_wrt_x(double x, double z) { return -2*x*exp(-(x*x+z*z)); }
 
 struct Vec3 graph_perp_vector(double x, double z)
 {

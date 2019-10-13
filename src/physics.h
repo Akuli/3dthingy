@@ -1,6 +1,7 @@
 #ifndef PHYSICS_H
 #define PHYSICS_H
 
+#include <stdbool.h>
 #include "vecmat.h"
 
 // this is needed for physics because changing this must not affect how fast objects move
@@ -14,7 +15,8 @@ struct PhysicsObject {
 	double frictionness;
 };
 
-void physicsobject_move(struct PhysicsObject *po);
+// returns whether the object touches the graph
+bool physicsobject_move(struct PhysicsObject *po);
 
 
 #endif   // PHYSICS_H

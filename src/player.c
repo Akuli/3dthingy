@@ -7,18 +7,16 @@
 #define VIEW_WIDTH_ANGLE 1.0
 #define VIEW_HEIGHT_ANGLE (VIEW_WIDTH_ANGLE * DISPLAY_HEIGHT / DISPLAY_WIDTH)
 
-#define MOVING_SPEED 0.5
-#define ROTATION_SPEED 0.1
+#define MOVING_SPEED 10
+#define ROTATION_SPEED 3
 
 static const struct Vec3 player_to_camera = { 0.0, 0.5, 0.0 };
 
 void player_init(struct Player *plr)
 {
-	plr->physics = (struct PhysicsObject){
-		.location = (struct Vec3){ 3.0, 0.5, 4.0 },
-		.velocity = (struct Vec3){ 0.0, 0.0, 0.0 },
-		.frictionness = 3.0,
-	};
+	memset(plr, 0, sizeof *plr);
+	plr->physics.location = (struct Vec3){ 3.0, 0.5, 4.0 };
+	plr->physics.frictionness = 15.0;
 	plr->rot = 0;
 }
 
@@ -74,25 +72,18 @@ bool player_getdisplaypoint(struct Player plr, struct Vec3 pnt, struct DisplayPo
 	return true;
 }
 
-void player_move(struct Player *plr, enum PlayerMove mv, int dir)
+void player_move(struct Player *plr)
 {
-	assert(dir==1 || dir==-1);
-	struct Vec3 diff;
+	bool touchesground = physicsobject_move(&plr->physics);
 
-	// fps not used here because it does not affect how often this is called
-	// this triggers repeatedly because keys are held down
-	switch(mv) {
-	case PLAYERMOVE_FORWARD:
-		diff = (struct Vec3){0,0,-dir*MOVING_SPEED};
-		break;
-	case PLAYERMOVE_HIGHER:
-		diff = (struct Vec3){0,dir*MOVING_SPEED,0};
-		break;
-	case PLAYERMOVE_ROTATE:
-		plr->rot -= dir*ROTATION_SPEED;
-		return;   // skip diff stuff
-	}
+	plr->rot -= plr->rotating * ROTATION_SPEED / (double)PHYSICS_FPS;
 
+	// it is touching the graph
+	struct Vec3 diff = {
+		0,
+		plr->movingup * MOVING_SPEED / (double)PHYSICS_FPS,
+		touchesground*( -plr->moving4ward * MOVING_SPEED / (double)PHYSICS_FPS ),
+	};
 	struct Mat3 rotate = mat3_rotation_xz(plr->rot);
 	plr->physics.velocity = vec3_add(plr->physics.velocity, mat3_mul_vec3(rotate, diff));
 }

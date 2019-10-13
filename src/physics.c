@@ -1,4 +1,6 @@
 #include <assert.h>
+#include <stdbool.h>
+#include <stdio.h>
 
 #include "graph.h"
 #include "physics.h"
@@ -7,10 +9,12 @@
 static const struct Vec3 gravity = { 0.0, -6.0/PHYSICS_FPS, 0.0 };
 
 
-void physicsobject_move(struct PhysicsObject *po)
+bool physicsobject_move(struct PhysicsObject *po)
 {
 	po->location = vec3_add(po->location, vec3_mul_scalar(po->velocity, 1.0/PHYSICS_FPS));
 	po->velocity = vec3_add(po->velocity, gravity);
+
+	printf("velocity: %f %f %f\n", po->velocity.x, po->velocity.y, po->velocity.z);
 
 	double graph = graph_y(po->location.x, po->location.z);
 	if (po->location.y < graph) {
@@ -28,5 +32,8 @@ void physicsobject_move(struct PhysicsObject *po)
 
 		// add friction
 		po->velocity = vec3_mul_scalar(po->velocity, 1.0 - friction);
+
+		return true;
 	}
+	return false;
 }
