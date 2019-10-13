@@ -36,10 +36,25 @@ struct Vec3 vec3_mul_scalar(struct Vec3 v, double c)
 	return (struct Vec3){v.x*c, v.y*c, v.z*c};
 }
 
+struct Vec3 vec3_projection(struct Vec3 v, struct Vec3 onto)
+{
+	return vec3_mul_scalar(onto, vec3_dot(v, onto) / vec3_dot(onto, onto));
+}
+
 struct Vec3 vec3_unit(struct Vec3 v)
 {
 	return vec3_mul_scalar(v, 1.0/vec3_len(v));
 }
+
+struct Vec3 vec3_cross(struct Vec3 v, struct Vec3 w)
+{
+	return (struct Vec3){
+		v.y*w.z - v.z*w.y,
+		v.z*w.x - v.x*w.z,
+		v.x*w.y - v.y*w.x
+	};
+}
+
 
 struct Mat3 mat3_rotation_xz(double w)
 {

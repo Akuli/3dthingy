@@ -1,10 +1,7 @@
-#include <math.h>
-
 #include "display.h"
 #include "player.h"
-
+#include "graph.h"
 #include "grid.h"
-
 
 #define SIZE 8
 #define LINES_PER_UNIT 10
@@ -21,13 +18,6 @@ static void draw_line(struct SDL_Renderer *rnd, const struct Player *plr,
 	}
 }
 
-static double f(double x, double z)
-{
-	//return 0.;
-	//return exp(-(x*x + z*z));
-	return sin(x) + sin(z);
-}
-
 void grid_draw(struct SDL_Renderer *rnd, const struct Player *plr)
 {
 	int sz = SIZE * LINES_PER_UNIT;
@@ -39,8 +29,14 @@ void grid_draw(struct SDL_Renderer *rnd, const struct Player *plr)
 			xx /= LINES_PER_UNIT;
 			zz /= LINES_PER_UNIT;
 
-			draw_line(rnd, plr, (struct Vec3){ x, f(x,z), z }, (struct Vec3){ xx, f(xx,z), z });
-			draw_line(rnd, plr, (struct Vec3){ x, f(x,z), z }, (struct Vec3){ x, f(x,zz), zz });
+			// TODO: cache graph_y values?
+			struct Vec3 point   = { x, graph_y(x,z), z };
+			struct Vec3 xxpoint = { xx, graph_y(xx,z), z };
+			struct Vec3 zzpoint = { x, graph_y(x,zz), zz };
+
+			draw_line(rnd, plr, point, xxpoint);
+			draw_line(rnd, plr, point, zzpoint);
+			draw_line(rnd, plr, point, vec3_add(point, vec3_mul_scalar(graph_perp_vector(x, z), 0.1)));
 		}
 	}
 }

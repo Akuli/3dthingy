@@ -13,10 +13,13 @@ struct Vec3 vec3_add(struct Vec3 a, struct Vec3 b);
 struct Vec3 vec3_add3(struct Vec3 a, struct Vec3 b, struct Vec3 c);
 struct Vec3 vec3_neg(struct Vec3 a);
 struct Vec3 vec3_sub(struct Vec3 a, struct Vec3 b);
-double vec3_dot(struct Vec3 a, struct Vec3 b);
-double vec3_len(struct Vec3 v);
 struct Vec3 vec3_mul_scalar(struct Vec3 v, double c);
 struct Vec3 vec3_unit(struct Vec3 v);
+struct Vec3 vec3_cross(struct Vec3 v, struct Vec3 w);
+struct Vec3 vec3_projection(struct Vec3 v, struct Vec3 onto);
+
+double vec3_dot(struct Vec3 a, struct Vec3 b);
+double vec3_len(struct Vec3 v);
 
 
 struct Mat3 {

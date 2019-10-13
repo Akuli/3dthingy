@@ -84,7 +84,6 @@ int main(int argc, char **argv)
 		}
 
 		if (changeflag) {
-			printf("ch\n");
 			SDL_RenderClear(rnd);
 			grid_draw(rnd, &plr);
 		}
