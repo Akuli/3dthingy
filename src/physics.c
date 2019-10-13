@@ -1,4 +1,5 @@
 #include <assert.h>
+
 #include "graph.h"
 #include "physics.h"
 #include "vecmat.h"
@@ -15,6 +16,9 @@ void physicsobject_move(struct PhysicsObject *po)
 	if (po->location.y < graph) {
 		double friction = (graph - po->location.y) * po->frictionness;
 		assert(friction > 0);
+		if (friction > 1)
+			friction = 1;
+
 		po->location.y = graph;
 
 		// remove all velocity except what goes in the direction of the graph
@@ -22,7 +26,7 @@ void physicsobject_move(struct PhysicsObject *po)
 		struct Vec3 badcomponent = vec3_projection(po->velocity, perp);
 		po->velocity = vec3_sub(po->velocity, badcomponent);
 
-		// friction
+		// add friction
 		po->velocity = vec3_mul_scalar(po->velocity, 1.0 - friction);
 	}
 }
