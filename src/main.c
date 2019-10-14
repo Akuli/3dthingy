@@ -80,11 +80,13 @@ int main(int argc, char **argv)
 			}
 		}
 
+		struct DisplayCamera cam = player_getcamera(&plr);
+
 		SDL_RenderClear(rnd);
 
 		SDL_SetRenderDrawColor(rnd, 0xff, 0xff, 0xff, 0xff);
 		displaybuf_clear(gridbuf);
-		grid_draw(gridbuf, &plr);   // this is the performance bottleneck
+		grid_draw(gridbuf, &cam);   // this is the performance bottleneck
 		displaybuf_render(rnd, gridbuf);
 
 		SDL_SetRenderDrawColor(rnd, 0, 0, 0, 0xff);

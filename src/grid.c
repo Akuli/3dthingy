@@ -6,19 +6,7 @@
 #define SIZE 8
 #define LINES_PER_UNIT 10
 
-
-static void draw_line(struct DisplayBuf *buf, const struct Player *plr,
-		struct Vec3 start, struct Vec3 end)
-{
-	struct DisplayPoint dp1, dp2;
-	if (player_getdisplaypoint(*plr, start, &dp1) &&
-		player_getdisplaypoint(*plr, end, &dp2))
-	{
-		displaybuf_draw_line(buf, dp1, dp2);
-	}
-}
-
-void grid_draw(struct DisplayBuf *buf, const struct Player *plr)
+void grid_draw(struct DisplayBuf *buf, const struct DisplayCamera *cam)
 {
 	int sz = SIZE * LINES_PER_UNIT;
 	for (int rawx = -sz; rawx < sz; rawx++) {
@@ -34,12 +22,12 @@ void grid_draw(struct DisplayBuf *buf, const struct Player *plr)
 			struct Vec3 xxpoint = { xx, graph_y(xx,z), z };
 			struct Vec3 zzpoint = { x, graph_y(x,zz), zz };
 
-			draw_line(buf, plr, point, xxpoint);
-			draw_line(buf, plr, point, zzpoint);
+			display_line(buf, cam, point, xxpoint);
+			display_line(buf, cam, point, zzpoint);
 
 			// uncomment to see perpendicular vectors
 			// useful for checking that you got derivatives right in graph.c
-			//draw_line(buf, plr, point, vec3_add(point, vec3_mul_scalar(graph_perp_vector(x, z), 0.1)));
+			//display_line(buf, cam, point, vec3_add(point, vec3_mul_scalar(graph_perp_vector(x, z), 0.1)));
 		}
 	}
 }

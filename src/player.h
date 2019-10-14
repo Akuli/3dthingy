@@ -16,12 +16,8 @@ struct Player {
 };
 
 void player_init(struct Player *plr);
-
-// figure out where the player sees the given point
-// returns false when the point is on the other side of the player and should just be completely ignored
-bool player_getdisplaypoint(struct Player plr, struct Vec3 pnt, struct DisplayPoint *ptr);
-
 void player_move(struct Player *plr);
+struct DisplayCamera player_getcamera(const struct Player *plr);
 
 
 #endif    // PLAYER_H
