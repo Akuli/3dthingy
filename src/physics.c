@@ -2,7 +2,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#include "graph.h"
+#include "floor.h"
 #include "physics.h"
 #include "vecmat.h"
 
@@ -16,17 +16,17 @@ bool physicsobject_move(struct PhysicsObject *po)
 
 	printf("velocity: %f %f %f\n", po->velocity.x, po->velocity.y, po->velocity.z);
 
-	double graph = graph_y(po->location.x, po->location.z);
-	if (po->location.y < graph) {
-		double friction = (graph - po->location.y) * po->frictionness;
+	double floor = floor_y(po->location.x, po->location.z);
+	if (po->location.y < floor) {
+		double friction = (floor - po->location.y) * po->frictionness;
 		assert(friction > 0);
 		if (friction > 1)
 			friction = 1;
 
-		po->location.y = graph;
+		po->location.y = floor;
 
-		// remove all velocity except what goes in the direction of the graph
-		struct Vec3 perp = graph_perp_vector(po->location.x, po->location.z);
+		// remove all velocity except what goes in the direction of the floor
+		struct Vec3 perp = floor_perp_vector(po->location.x, po->location.z);
 		struct Vec3 badcomponent = vec3_projection(po->velocity, perp);
 		po->velocity = vec3_sub(po->velocity, badcomponent);
 

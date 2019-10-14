@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <SDL2/SDL.h>
 #include "display.h"
-#include "grid.h"
+#include "floor.h"
 #include "physics.h"
 #include "player.h"
 #include "vecmat.h"
@@ -53,7 +53,7 @@ int main(int argc, char **argv)
 	struct Player plr;
 	player_init(&plr);
 
-	struct DisplayBuf *gridbuf = displaybuf_new();
+	struct DisplayBuf *floorbuf = displaybuf_new();
 
 	while (true) {
 		uint32_t start = SDL_GetTicks();
@@ -69,7 +69,7 @@ int main(int argc, char **argv)
 				break;
 
 			case SDL_QUIT:
-				displaybuf_free(gridbuf);
+				displaybuf_free(floorbuf);
 				SDL_DestroyWindow(win);
 				SDL_DestroyRenderer(rnd);
 				SDL_Quit();
@@ -85,9 +85,9 @@ int main(int argc, char **argv)
 		SDL_RenderClear(rnd);
 
 		SDL_SetRenderDrawColor(rnd, 0xff, 0xff, 0xff, 0xff);
-		displaybuf_clear(gridbuf);
-		grid_draw(gridbuf, &cam);   // this is the performance bottleneck
-		displaybuf_render(rnd, gridbuf);
+		displaybuf_clear(floorbuf);
+		floor_draw(floorbuf, &cam);   // this is the performance bottleneck
+		displaybuf_render(rnd, floorbuf);
 
 		SDL_SetRenderDrawColor(rnd, 0, 0, 0, 0xff);
 		SDL_RenderPresent(rnd);
