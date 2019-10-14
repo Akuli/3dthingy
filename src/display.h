@@ -14,7 +14,7 @@ struct DisplayBuf;
 struct DisplayBuf *displaybuf_new(void);
 void displaybuf_free(struct DisplayBuf *buf);
 void displaybuf_clear(struct DisplayBuf *buf);
-void displaybuf_render(SDL_Renderer *rnd, const struct DisplayBuf *buf);
+void displaybuf_render(SDL_Renderer *rnd, struct DisplayBuf *buf);
 
 
 // contains all the information needed for drawing 3d things

@@ -34,3 +34,13 @@ iwyu:
 	for file in src/main.c $(SRC); do \
 		$(IWYU) $(IWYUFLAGS) -I. "$$file" 2>&1 || true; \
 	done | grep --line-buffered -v '^(.* has correct #includes/fwd-decls)$$' | cat -s
+
+.PHONY: callgrind.out
+callgrind.out: 3dthingy
+	valgrind --tool=callgrind --callgrind-out-file=$@ ./3dthingy
+
+graph.gv: callgrind.out
+	gprof2dot $< --format=callgrind --output=$@
+
+graph.png: graph.gv
+	dot -Tpng $< -o $@

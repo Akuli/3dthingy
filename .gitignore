@@ -1,2 +1,5 @@
 3dthingy
 obj/
+callgrind.out
+graph.png
+graph.gv

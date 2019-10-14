@@ -7,16 +7,12 @@
 #include <string.h>
 #include "vecmat.h"
 
-#define VIEW_WIDTH_ANGLE 1.0
-#define VIEW_HEIGHT_ANGLE (VIEW_WIDTH_ANGLE * DISPLAY_HEIGHT / DISPLAY_WIDTH)
+#define VIEW_WIDTH_SLOPE 1.5
+#define VIEW_HEIGHT_SLOPE (VIEW_WIDTH_SLOPE * DISPLAY_HEIGHT / DISPLAY_WIDTH)
 
 struct Point2D {
 	double x;    // pixels, 0 means left, more means right
 	double y;    // pixels, 0 means top, more means down
-};
-
-struct DisplayBuf {
-	char data[DISPLAY_HEIGHT][DISPLAY_WIDTH];
 };
 
 // maps x to slope*x + constant
@@ -24,13 +20,17 @@ struct LinearMap {
 	double slope, constant;
 };
 
-// create_linear_map(3, 7, 0, 100) maps 4 to 25
+// LinearMap "constructors" work so that (3, 7, 0, 100) maps 4 to 25
+
+#define CREATE_LINEAR_MAP_COMPILE_TIME(SMIN, SMAX, DMIN, DMAX) { \
+	.slope = ((DMAX)-(DMIN))/((SMAX)-(SMIN)), \
+	.constant = (DMIN) - (SMIN)*((DMAX)-(DMIN))/((SMAX)-(SMIN)), \
+}
+
 static struct LinearMap
 create_linear_map(double srcmin, double srcmax, double dstmin, double dstmax)
 {
-	double slope = (dstmax - dstmin)/(srcmax - srcmin);
-	double constant = dstmin - srcmin*slope;
-	return (struct LinearMap){ slope, constant };
+	return (struct LinearMap) CREATE_LINEAR_MAP_COMPILE_TIME(srcmin, srcmax, dstmin, dstmax);
 }
 
 // does da mapping
@@ -40,12 +40,12 @@ static inline double calculate_linear_map(struct LinearMap map, double val)
 }
 
 
-// linear_map(3, 7, 0, 100, 4) == 25
-static double linear_map(double srcmin, double srcmax, double dstmin, double dstmax, double val)
-{
-	return calculate_linear_map(create_linear_map(srcmin, srcmax, dstmin, dstmax), val);
-}
+struct DisplayBuf {
+	char data[DISPLAY_HEIGHT][DISPLAY_WIDTH];
 
+	// this is for drawing multiple points at once, helps with performance
+	SDL_Point points[DISPLAY_WIDTH * DISPLAY_HEIGHT];
+};
 
 struct DisplayBuf *displaybuf_new(void)
 {
@@ -64,15 +64,18 @@ void displaybuf_free(struct DisplayBuf *buf)
 
 void displaybuf_clear(struct DisplayBuf *buf)
 {
-	memset(buf, 0, sizeof *buf);
+	memset(buf->data, 0, sizeof(buf->data));
 }
 
-void displaybuf_render(SDL_Renderer *rnd, const struct DisplayBuf *buf)
+void displaybuf_render(SDL_Renderer *rnd, struct DisplayBuf *buf)
 {
+	int n = 0;
 	for (int x = 0; x < DISPLAY_WIDTH; x++)
 		for (int y = 0; y < DISPLAY_HEIGHT; y++)
 			if (buf->data[y][x])
-				SDL_RenderDrawPoint(rnd, x, y);
+				buf->points[n++] = (SDL_Point){ x, y };
+
+	SDL_RenderDrawPoints(rnd, buf->points, n);
 }
 
 
@@ -119,6 +122,13 @@ static void draw_2d_line(struct DisplayBuf *buf, struct Point2D dp1, struct Poin
 static bool point_to_2d(
 	const struct DisplayCamera *cam, struct Vec3 pnt, struct Point2D *ptr)
 {
+	static const struct LinearMap viewmap_x = CREATE_LINEAR_MAP_COMPILE_TIME(
+		-VIEW_WIDTH_SLOPE, VIEW_WIDTH_SLOPE,
+		0, DISPLAY_WIDTH);
+	static const struct LinearMap viewmap_y = CREATE_LINEAR_MAP_COMPILE_TIME(
+		-VIEW_HEIGHT_SLOPE, VIEW_HEIGHT_SLOPE,
+		0, DISPLAY_HEIGHT);
+
 	struct Vec3 rel = mat3_mul_vec3(cam->world2player, vec3_sub(pnt, cam->location));
 
 	if (rel.z > 0)   // object behind the camera
@@ -130,18 +140,8 @@ static bool point_to_2d(
 	// positive means down, 0 means forward, negative means up
 	double yzslope = (-rel.y) / (-rel.z);
 
-	// asin(1) = pi/2 = 1/4 of a turn
-	assert(0 < VIEW_WIDTH_ANGLE && VIEW_WIDTH_ANGLE < asin(1));
-	assert(0 < VIEW_HEIGHT_ANGLE && VIEW_HEIGHT_ANGLE < asin(1));
-
-	ptr->x = linear_map(
-		-tan(VIEW_WIDTH_ANGLE), tan(VIEW_WIDTH_ANGLE),
-		0, DISPLAY_WIDTH,
-		xzslope);
-	ptr->y = linear_map(
-		-tan(VIEW_HEIGHT_ANGLE), tan(VIEW_HEIGHT_ANGLE),
-		0, DISPLAY_HEIGHT,
-		yzslope);
+	ptr->x = calculate_linear_map(viewmap_x, xzslope);
+	ptr->y = calculate_linear_map(viewmap_y, yzslope);
 	return true;
 }
 
