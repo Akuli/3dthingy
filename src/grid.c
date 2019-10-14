@@ -1,3 +1,5 @@
+// TODO: this file is so short that it should be a part of graph.c
+
 #include "display.h"
 #include "player.h"
 #include "graph.h"
