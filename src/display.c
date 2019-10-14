@@ -15,12 +15,31 @@ struct DisplayBuf {
 	char data[DISPLAY_HEIGHT][DISPLAY_WIDTH];
 };
 
+// maps x to slope*x + constant
+struct LinearMap {
+	double slope, constant;
+};
+
+// create_linear_map(3, 7, 0, 100) maps 4 to 25
+static struct LinearMap
+create_linear_map(double srcmin, double srcmax, double dstmin, double dstmax)
+{
+	double slope = (dstmax - dstmin)/(srcmax - srcmin);
+	double constant = dstmin - srcmin*slope;
+	return (struct LinearMap){ slope, constant };
+}
+
+// does da mapping
+static inline double calculate_linear_map(struct LinearMap map, double val)
+{
+	return map.slope*val + map.constant;
+}
+
 
 // linear_map(3, 7, 0, 100, 4) == 25
 static double linear_map(double srcmin, double srcmax, double dstmin, double dstmax, double val)
 {
-	double relative = (val - srcmin) / (srcmax - srcmin);
-	return dstmin + relative*(dstmax - dstmin);
+	return calculate_linear_map(create_linear_map(srcmin, srcmax, dstmin, dstmax), val);
 }
 
 
@@ -62,6 +81,7 @@ static void swap(struct Point2D *dp1, struct Point2D *dp2)
 
 #define max(a, b) ((a)>(b) ? (a) : (b))
 
+// this is faster than just using sdl renderer, but still a performance bottleneck
 static void draw_2d_line(struct DisplayBuf *buf, struct Point2D dp1, struct Point2D dp2)
 {
 	// avoid division by zero
@@ -71,16 +91,20 @@ static void draw_2d_line(struct DisplayBuf *buf, struct Point2D dp1, struct Poin
 	if (fabs(dp1.x - dp2.x) > fabs(dp1.y - dp2.y)) {
 		if (dp1.x > dp2.x)
 			swap(&dp1, &dp2);
+
+		struct LinearMap lin = create_linear_map(dp1.x, dp2.x, dp1.y, dp2.y);
 		for (int x = max(0, (int)dp1.x); x < (int)dp2.x && x < DISPLAY_WIDTH; x++) {
-			int y = (int) linear_map(dp1.x, dp2.x, dp1.y, dp2.y, x);
+			int y = (int) calculate_linear_map(lin, x);
 			if (0 <= y && y < DISPLAY_HEIGHT)
 				buf->data[y][x] = 1;
 		}
 	} else {
 		if (dp1.y > dp2.y)
 			swap(&dp1, &dp2);
+
+		struct LinearMap lin = create_linear_map(dp1.y, dp2.y, dp1.x, dp2.x);
 		for (int y = max(0, (int)dp1.y); y < (int)dp2.y && y < DISPLAY_HEIGHT; y++) {
-			int x = (int) linear_map(dp1.y, dp2.y, dp1.x, dp2.x, y);
+			int x = (int) calculate_linear_map(lin, y);
 			if (0 <= x && x < DISPLAY_WIDTH)
 				buf->data[y][x] = 1;
 		}

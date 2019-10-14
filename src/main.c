@@ -86,8 +86,8 @@ int main(int argc, char **argv)
 
 		SDL_SetRenderDrawColor(rnd, 0xff, 0xff, 0xff, 0xff);
 		displaybuf_clear(floorbuf);
-		floor_draw(floorbuf, &cam);   // this is the performance bottleneck
-		displaybuf_render(rnd, floorbuf);
+		floor_draw(floorbuf, &cam);         // this is a performance bottleneck
+		displaybuf_render(rnd, floorbuf);   // this is a performance bottleneck
 
 		SDL_SetRenderDrawColor(rnd, 0, 0, 0, 0xff);
 		SDL_RenderPresent(rnd);
