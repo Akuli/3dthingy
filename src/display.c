@@ -1,7 +1,11 @@
 #include "display.h"
 #include <assert.h>
+#include <math.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include "vecmat.h"
 
 #define VIEW_WIDTH_ANGLE 1.0
 #define VIEW_HEIGHT_ANGLE (VIEW_WIDTH_ANGLE * DISPLAY_HEIGHT / DISPLAY_WIDTH)

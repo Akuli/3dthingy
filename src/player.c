@@ -1,7 +1,8 @@
 #include "player.h"
-#include <assert.h>
-#include <math.h>
+#include <stdbool.h>
+#include <string.h>
 #include "display.h"
+#include "physics.h"
 #include "vecmat.h"
 
 #define MOVING_SPEED 10

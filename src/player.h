@@ -3,7 +3,6 @@
 
 #include "display.h"
 #include "physics.h"
-#include "vecmat.h"
 
 struct Player {
 	struct PhysicsObject physics;

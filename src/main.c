@@ -7,7 +7,6 @@
 #include "floor.h"
 #include "physics.h"
 #include "player.h"
-#include "vecmat.h"
 
 
 static void handle_key(struct Player *plr, SDL_Keysym k, bool keydown)
