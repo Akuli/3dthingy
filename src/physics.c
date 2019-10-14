@@ -16,18 +16,17 @@ bool physicsobject_move(struct PhysicsObject *po)
 
 	printf("velocity: %f %f %f\n", po->velocity.x, po->velocity.y, po->velocity.z);
 
-	double floor = floor_y(po->location.x, po->location.z);
-	if (po->location.y < floor) {
-		double friction = (floor - po->location.y) * po->frictionness;
+	struct FloorInfo fi = floorinfo_get(po->location.x, po->location.z);
+	if (po->location.y < fi.yvalue) {
+		double friction = (fi.yvalue - po->location.y) * po->frictionness;
 		assert(friction > 0);
 		if (friction > 1)
 			friction = 1;
 
-		po->location.y = floor;
+		po->location.y = fi.yvalue;
 
 		// remove all velocity except what goes in the direction of the floor
-		struct Vec3 perp = floor_perp_vector(po->location.x, po->location.z);
-		struct Vec3 badcomponent = vec3_projection(po->velocity, perp);
+		struct Vec3 badcomponent = vec3_projection(po->velocity, floorinfo_perp(&fi));
 		po->velocity = vec3_sub(po->velocity, badcomponent);
 
 		// add friction

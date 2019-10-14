@@ -6,13 +6,22 @@
 #include "vecmat.h"
 #include "display.h"
 
-// returns height of floor
-double floor_y(double x, double z);
+struct FloorInfo {
+	// how high is it
+	double yvalue;
 
-// returns a vector perpendicular to the floor at (x, floor_y(x,z), z)
-struct Vec3 floor_perp_vector(double x, double z);
+	// partial derivatives
+	double xpartial;
+	double zpartial;
+};
 
-void floor_draw(struct DisplayBuf *buf, struct DisplayCamera *cam);
+struct FloorInfo floorinfo_get(double x, double z);
+
+// returns a vector perpendicular to the floor, of undefined length
+struct Vec3 floorinfo_perp(const struct FloorInfo *info);
+
+// draws a grid of a part of the floor
+void floor_draw(struct DisplayBuf *buf, const struct DisplayCamera *cam);
 
 
 #endif   // FLOOR_H
