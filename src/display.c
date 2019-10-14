@@ -1,15 +1,35 @@
 #include "display.h"
 #include <stdbool.h>
+#include <stdlib.h>
 
-bool display_pointisonscreen(struct DisplayPoint dp)
+struct DisplayBuf {
+	char data[DISPLAY_HEIGHT][DISPLAY_WIDTH];
+};
+
+struct DisplayBuf *displaybuf_new(void)
 {
-	int x = (int)dp.x;
-	int y = (int)dp.y;
-	return (0 <= x && x < DISPLAY_WIDTH &&
-			0 <= y && y < DISPLAY_HEIGHT);
+	struct DisplayBuf *buf = malloc(sizeof(struct DisplayBuf));
+	if (!buf) {
+		fprintf(stderr, "not enough memory\n");
+		abort();
+	}
+	return buf;
+}
+
+void displaybuf_free(struct DisplayBuf *buf)
+{
+	free(buf);
+}
+
+void displaybuf_clear(struct DisplayBuf *buf)
+{
+	memset(buf->data, 0, DISPLAY_WIDTH * DISPLAY_HEIGHT);
 }
 
 
+// not needed currently, but uncomment if you need this
+
+/*
 // finds intersection point of infinitely long lines a and b
 static struct DisplayPoint intersect_lines(
 	struct DisplayPoint astart, struct DisplayPoint aend,
@@ -29,40 +49,56 @@ static struct DisplayPoint intersect_lines(
 		( (x1*y2-y1*x2)*(y3-y4) - (y1-y2)*(x3*y4-y3*x4) )/denom,
 	};
 }
+*/
 
-static void fit_point_of_line_to_screen(struct DisplayPoint *pnt, struct DisplayPoint otherpnt)
+
+static void swap(struct DisplayPoint *dp1, struct DisplayPoint *dp2)
 {
-	// e.g. tl = top left
-	struct DisplayPoint tl = {0,0};
-	struct DisplayPoint tr = {DISPLAY_WIDTH-1,0};
-	struct DisplayPoint bl = {0,DISPLAY_HEIGHT-1};
-	struct DisplayPoint br = {DISPLAY_WIDTH-1,DISPLAY_HEIGHT-1};
-
-	if (pnt->x < 0)
-		*pnt = intersect_lines(*pnt, otherpnt, tl, bl);
-	if (pnt->x >= DISPLAY_WIDTH)
-		*pnt = intersect_lines(*pnt, otherpnt, tr, br);
-	if (pnt->y < 0)
-		*pnt = intersect_lines(*pnt, otherpnt, tl, tr);
-	if (pnt->y >= DISPLAY_HEIGHT)
-		*pnt = intersect_lines(*pnt, otherpnt, bl, br);
+	struct DisplayPoint tmp = *dp1;
+	*dp1 = *dp2;
+	*dp2 = tmp;
 }
 
-void display_line(SDL_Renderer *rnd, struct DisplayPoint dp1, struct DisplayPoint dp2)
+// TODO: don't copy/pasta this between files
+// linear_map(3, 7, 0, 100, 4) == 25
+static double linear_map(double srcmin, double srcmax, double dstmin, double dstmax, double val)
 {
-	bool scr1 = display_pointisonscreen(dp1);
-	bool scr2 = display_pointisonscreen(dp2);
+	double relative = (val - srcmin) / (srcmax - srcmin);
+	return dstmin + relative*(dstmax - dstmin);
+}
 
-	if (!scr1 && !scr2)
+#define max(a, b) ((a)>(b) ? (a) : (b))
+
+void displaybuf_draw_line(struct DisplayBuf *buf, struct DisplayPoint dp1, struct DisplayPoint dp2)
+{
+	// avoid division by zero
+	if (dp1.x == dp2.x && dp1.y == dp2.y)
 		return;
-	if (!scr1)
-		fit_point_of_line_to_screen(&dp1, dp2);
-	if (!scr2)
-		fit_point_of_line_to_screen(&dp2, dp1);
 
-	if (!display_pointisonscreen(dp1) || !display_pointisonscreen(dp2))
-		return;
+	if (fabs(dp1.x - dp2.x) > fabs(dp1.y - dp2.y)) {
+		if (dp1.x > dp2.x)
+			swap(&dp1, &dp2);
+		for (int x = max(0, (int)dp1.x); x < (int)dp2.x && x < DISPLAY_WIDTH; x++) {
+			int y = (int) linear_map(dp1.x, dp2.x, dp1.y, dp2.y, x);
+			if (0 <= y && y < DISPLAY_HEIGHT)
+				buf->data[y][x] = 1;
+		}
+	} else {
+		if (dp1.y > dp2.y)
+			swap(&dp1, &dp2);
+		for (int y = max(0, (int)dp1.y); y < (int)dp2.y && y < DISPLAY_HEIGHT; y++) {
+			int x = (int) linear_map(dp1.y, dp2.y, dp1.x, dp2.x, y);
+			if (0 <= x && x < DISPLAY_WIDTH)
+				buf->data[y][x] = 1;
+		}
+	}
+}
 
-	// this function call uses a lot of cpu
-	SDL_RenderDrawLine(rnd, (int)dp1.x, (int)dp1.y, (int)dp2.x, (int)dp2.y);
+
+void displaybuf_render(SDL_Renderer *rnd, const struct DisplayBuf *buf)
+{
+	for (int x = 0; x < DISPLAY_WIDTH; x++)
+		for (int y = 0; y < DISPLAY_HEIGHT; y++)
+			if (buf->data[y][x])
+				SDL_RenderDrawPoint(rnd, x, y);
 }

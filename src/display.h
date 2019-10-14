@@ -12,9 +12,16 @@ struct DisplayPoint {
 	double y;    // pixels, 0 means top, more means down
 };
 
-bool display_pointisonscreen(struct DisplayPoint dp);
-void display_line(SDL_Renderer *rnd, struct DisplayPoint dp1, struct DisplayPoint dp2);
 
+// drawing lots of lines with SDL_RenderDrawLine uses more cpu than first putting
+// information about the lines to a DisplayBuf, and then drawing all those
+struct DisplayBuf;
+
+struct DisplayBuf *displaybuf_new(void);
+void displaybuf_free(struct DisplayBuf *buf);
+void displaybuf_clear(struct DisplayBuf *buf);
+void displaybuf_draw_line(struct DisplayBuf *buf, struct DisplayPoint dp1, struct DisplayPoint dp2);
+void displaybuf_render(SDL_Renderer *rnd, const struct DisplayBuf *buf);
 
 
 #endif   // DISPLAY_H

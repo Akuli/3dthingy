@@ -53,6 +53,8 @@ int main(int argc, char **argv)
 	struct Player plr;
 	player_init(&plr);
 
+	struct DisplayBuf *gridbuf = displaybuf_new();
+
 	while (true) {
 		uint32_t start = SDL_GetTicks();
 
@@ -67,7 +69,9 @@ int main(int argc, char **argv)
 				break;
 
 			case SDL_QUIT:
+				displaybuf_free(gridbuf);
 				SDL_DestroyWindow(win);
+				SDL_DestroyRenderer(rnd);
 				SDL_Quit();
 				return 0;
 
@@ -79,7 +83,9 @@ int main(int argc, char **argv)
 		SDL_RenderClear(rnd);
 
 		SDL_SetRenderDrawColor(rnd, 0xff, 0xff, 0xff, 0xff);
-		grid_draw(rnd, &plr);    // TODO: slow, uses a lot of cpu
+		displaybuf_clear(gridbuf);
+		grid_draw(gridbuf, &plr);   // this is the performance bottleneck
+		displaybuf_render(rnd, gridbuf);
 
 		SDL_SetRenderDrawColor(rnd, 0, 0, 0, 0xff);
 		SDL_RenderPresent(rnd);

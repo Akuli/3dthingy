@@ -3,7 +3,7 @@
 
 #include "player.h"
 
-void grid_draw(struct SDL_Renderer *renderer, const struct Player *player);
+void grid_draw(struct DisplayBuf *buf, const struct Player *plr);
 
 
 #endif   // GRID_H
