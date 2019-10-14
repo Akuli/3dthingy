@@ -1,6 +1,7 @@
 # 3d Thingy
 
-This is my experiment with creating a 3d game-engine-like-thingy using SDL 2.
+This is my experiment with creating a 3d game using SDL 2.
+I do all the 3d-ness myself, and I use SDL2 only for drawing points on a window.
 
 ![here it is running](screenshot.png)
 
