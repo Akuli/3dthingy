@@ -21,6 +21,10 @@ I have no idea what you need to do if you don't have apt.
 
 ## Running IWYU
 
+**You don't need to do this to run the program.**
+This is for developing program.
+IWYU checks whether the source code files have the correct includes.
+
 1. Install cmake
 
         $ sudo apt install cmake
